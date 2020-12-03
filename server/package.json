@@ -1,0 +1,22 @@
+{
+	"name": "server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"dependencies": {
+		"body-parser": "^1.19.0",
+		"express": "^4.17.1",
+		"firebase-admin": "^9.3.0",
+		"open-graph-scraper": "^4.7.0"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"start": "node index.js",
+		"debug": "node --inspect index.js",
+		"detele-all-notes": "firebase firestore:delete -r /notes",
+		"heroku-init": "git init && heroku git:remote -a film-note",
+		"heroku-deploy": "git add . && git commit -m 'deploy' && git push heroku master"
+	},
+	"author": "",
+	"license": "ISC"
+}

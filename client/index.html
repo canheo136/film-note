@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Film Note</title>
+    <!-- https://bootswatch.com/darkly/ -->
+    <link rel="shortcut icon" href="./images/fav.png" type="image/x-icon">
+    <link rel="stylesheet" href="./css/toggle-bootstrap-dark.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body class="bootstrap-dark custom-scrollbar" id="top-edge">
+    <div class="fluid-container m-4">
+        <div class="row justify-content-center mb-4 header">
+            <div class="col-6">
+                <div class="form-row">
+                    <div class="col">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text search-box"></span>
+                            </div>
+                            <input type="text" role="search-box" class="form-control" placeholder="Note title">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button class="btn border-secondary btn-add-note" role="create-note"></button>
+                                <button class="btn border-secondary btn-view-mode" role="toggle-view"></button>
+                            </div>
+                            <select class="custom-select" role="note-filter">
+                                <option value="all">All</option>
+                                <option value="new">New</option>
+                                <option value="seen">Seen</option>
+                            </select>
+
+                            <div class="dropdown input-group-append">
+                                <button class="btn border-secondary btn-sort" type="button" id="dropdownMenuButton"
+                                    data-toggle="dropdown"></button>
+                                <div class="dropdown-menu sort" role="sort-item">
+                                    <div class="dropdown-item" data-group="alphabet" data-type="ascending">
+                                        <span style="background-image: url('./images/sort-alpha-asc.svg');"></span>
+                                        <span class="ml-2">Alphabet asc</span>
+                                    </div>
+                                    <div class="dropdown-item" data-group="alphabet" data-type="descending">
+                                        <span style="background-image: url('./images/sort-alpha-desc.svg');"></span>
+                                        <span class="ml-2">Alphabet desc</span>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-item" data-group="datetime" data-type="ascending">
+                                        <span style="background-image: url('./images/sort-date-asc.svg');"></span>
+                                        <span class="ml-2">Date asc</span>
+                                    </div>
+                                    <div class="dropdown-item" data-group="datetime" data-type="descending">
+                                        <span style="background-image: url('./images/sort-date-desc.svg');"></span>
+                                        <span class="ml-2">Date desc</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row body justify-content-center" role="note-container">
+            <div class="center">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dropdown option-menu" role="option-menu">
+        <div class="dropdown-menu show">
+            <a class="dropdown-item" data-action="edit-note">Edit</a>
+            <a class="dropdown-item" data-action="delete-note">Delete</a>
+            <a class="dropdown-item" data-action="select-color">Colors</a>
+            <div class="color-category" role="popover-colors"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="input-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body custom-scrollbar">
+                    <div class="list-group note-group"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" data-action="save">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="#top-edge">
+        <button class="btn btn-scroll-to-top" title="Go to top">
+            <svg width="30px" height="30px" viewBox="0 0 16 16" class="bi bi-arrow-bar-up" fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z" />
+            </svg>
+        </button>
+    </a>
+
+    <div class="alert-container" role="alert-container"></div>
+</body>
+
+<script src="./script/jquery-3.5.1.min.js"></script>
+<script src="./script/popper-2.5.4.min.js"></script>
+<script src="./script/bootstrap.bundle.min.js"></script>
+
+<script src="./script/_Config.js"></script>
+<script src="./script/_Alert.js"></script>
+<script src="./script/MenuOption.js"></script>
+<script src="./script/InputModal.js"></script>
+<script src="./script/_NoteContainer.js"></script>
+<script src="./script/_NoteItem.js"></script>
+<script src="./script/Utils.js"></script>
+
+<script>
+    /**
+     * @param {Object} options
+     * @param {*} options.selector jQuery selector
+     * @param {*} options.container jQuery selector
+     * @param {String} options.type event name, default is `click`
+     * @param {Function} options.callback callback fn will be called when event is raised
+     * @param {Boolean} options.once true to detach event after raised, default is `false`
+     **/
+    function addEvent(options = {}) {
+        const {
+            selector = null,
+            container = null,
+            type = 'click',
+            callback = null,
+            once = false,
+        } = options;
+
+        if (!isFn(callback)) return null;
+        if (once) return $(selector).one(type, callback);
+        if (container) return $(container).on(type, selector, callback);
+
+        return $(selector).on(type, callback);
+    }
+
+    /**
+     * Call FIRST in script tag.
+     **/
+    function initViewStates() {
+        // Grid view by default
+        $('button[role="toggle-view"]')
+            .removeClass('list-view grid-view')
+            .addClass(config.ViewMode);
+
+        // Filter, show new film by default
+        $('[role="note-filter"] > [selected]').removeAttr('selected');
+        $(`[role="note-filter"] > [value="${config.Filter}"]`)
+            .attr('selected', 'selected');
+
+        // Newest film show first
+        $('[role="sort-item"] > .active').removeClass('active');
+        $(`[role="sort-item"] > [data-group="${config.Sorter.group}"][data-type="${config.Sorter.type}"]`)
+            .addClass('active');
+    }
+
+    function initEvents() {
+        // Select filter
+        addEvent({
+            type: 'change',
+            selector: 'select[role="note-filter"]',
+            callback: function () {
+                _container.filter({ visible: this.value });
+                config.Filter = this.value;
+                config.save();
+            }
+        });
+
+        // Sort item
+        addEvent({
+            container: '[role="sort-item"]',
+            selector: '.dropdown-item:not(.active)',
+            callback: function () {
+                const type = $(this).data('type');
+                const group = $(this).data('group');
+                const options = {
+                    update: group === 'datetime' ? type : null,
+                    alphabet: group === 'alphabet' ? type : null,
+                }
+                _container.sortItems(options).reorderVisibleItems();
+
+                // Update view, reset active group sorter
+                $(this).parent().children().removeClass('active');
+                $(this).addClass('active');
+
+                config.Sorter.type = type;
+                config.Sorter.group = group;
+                config.save();
+            }
+        })
+
+        // Create note
+        addEvent({
+            selector: 'button[role="create-note"]',
+            callback: inputModal.show.bind(inputModal)
+        });
+
+        // Toggle view mode
+        addEvent({
+            selector: 'button[role="toggle-view"]',
+            callback: function () {
+                const isGrid = _container.toggleViewMode();
+                $(this).addClass(isGrid ? 'grid-view' : 'list-view')
+                    .removeClass(isGrid ? 'list-view' : 'grid-view');
+
+                config.ViewMode = isGrid ? 'grid-view' : 'list-view';
+                config.save();
+            }
+        });
+
+        // Search
+        addEvent({
+            type: 'keydown',
+            selector: 'input[role="search-box"]',
+            callback: function (e) {
+                // Enter to search
+                if (e.keyCode !== 13) return;
+                _container.filter({ search: this.value.trim() });
+
+                e.stopPropagation();
+                addEvent({
+                    once: true,
+                    type: 'keydown',
+                    selector: e.target,
+                    callback: _e => {
+                        if (_e.keyCode === 27)
+                            this.value = '';
+                    }
+                })
+            }
+        });
+
+        // Back to prev filter
+        addEvent({
+            type: 'keydown',
+            selector: document,
+            callback: function (e) {
+                if (e.keyCode !== 27) return;
+                execFn(_container.reverseFilter, _container);
+            }
+        })
+
+        // Input focus
+        addEvent({
+            type: 'focus',
+            container: document,
+            selector: 'input, [contenteditable]',   // div[contenteditable] add dynamically
+            callback: function (e) {
+                if (e.target.tagName.toLowerCase() === 'input') {
+                    $(e.target).select();
+                }
+                else {
+                    // div[contenteditable]
+                    // https://developer.mozilla.org/en-US/docs/Web/API/Selection/selectAllChildren
+                    window.getSelection().selectAllChildren(e.target);
+                }
+            }
+        })
+
+        // Paste
+        addEvent({
+            type: 'paste',
+            selector: document.body,
+            callback: function (e) {
+                e.preventDefault();
+                const cleanPastedData = () => {
+                    let pastedData = e.originalEvent.clipboardData.getData('text');
+                    if (isURL(pastedData))
+                        return pastedData;
+
+                    pastedData = cleanPastedHTML(pastedData).toLowerCase();
+                    pastedData = pastedData.charAt(0).toUpperCase() + pastedData.slice(1);
+
+                    return pastedData;
+                }
+
+                if (e.target.tagName.toLowerCase() === 'input') {
+                    $(e.target).val(cleanPastedData());
+                }
+                else if (e.target.getAttribute('contenteditable')) {
+                    $(e.target).html(cleanPastedData());
+                }
+            }
+        });
+
+        // Option menu click
+        menu.onMenuClick = (action, note, colorName) => {
+            switch (action) {
+                case 'edit-note':
+                    inputModal.show({
+                        path: note.Path,
+                        title: note.Title,
+                        link: note.Link,
+                        content: note.Content
+                    });
+                    break;
+
+                case 'delete-note':
+                    const delNote = function () {
+                        deleteNote({ path: note.Path })
+                            .then(res => {
+                                _container.removeItem({ path: note.Path });
+                                _Alert.Warning('Deleted!');
+                            })
+                            .catch(err => {
+                                _Alert.Error('Delete failed');
+                                console.warn(err);
+                            })
+                    }
+
+                    _Alert.Cancelation({
+                        message: `Delete <i>${note.Title}</i>`,
+                        callback: delNote
+                    });
+                    break;
+            
+                case 'picker':
+                    updateNote({
+                        path: note.Path,
+                        data: { Color: colorName }
+                    })
+                    .then(res => {
+                        const item = _container.items.filter(i => i.note.ID === res.ID)[0];
+                        item.note.Color = res.Color;
+                        item.refresh();
+                    })
+                    .catch(err => {
+                        _Alert.Error('Edit color failed');
+                        console.warn(err);
+                    });
+                    break;
+            }
+        }
+
+        // Modal on save
+        inputModal.onSaveChanges = (path, data, action) => {
+            if (action === 'create') {
+                createNote(data)
+                    .then(res => {
+                        _container.addItem(new _NoteItem({ note: res }));
+                        _Alert.Success(`Created <strong>${res.Title}</strong`);
+                    })
+                    .catch(err => {
+                        _Alert.Error('Create failed');
+                        console.warn(err);
+                    });
+                return;
+            }
+            if (action === 'edit') {
+                updateNote({ path, data })
+                    .then(res => {
+                        _container.editItem(res);
+                        _Alert.Success(`Saved <strong>${res.Title}</strong`);
+                    })
+                    .catch(err => {
+                        _Alert.Error('Edit failed');
+                        console.warn(err);
+                    });
+            }
+        }
+    }
+
+    function _mobile() {
+        const host = prompt('Host', config.getHost());
+        const key = prompt('Key', config.getSecretKey());
+
+        config.setHost(host);
+        config.setSecretKey(key);
+
+        if(!host || !key) return Promise.reject();
+
+        return Promise.resolve({ host, key });
+    }
+</script>
+
+<script role="Start point">
+    initViewStates();
+    
+    fetchNotes()
+        .then(res => {
+            // DON'T touch me, see `initViewStates`
+            const type = $('[role="sort-item"] > .active').data('type');
+            const group = $('[role="sort-item"] > .active').data('group');
+            const viewMode = $('button[role="toggle-view"]').hasClass('grid-view') ?
+                'grid' : 'list';
+            const filter = {
+                seen: $('select[role="note-filter"]').val()
+            };
+            const sorter = {
+                create: group === 'datetime' ? type : null,
+                alphabet: group === 'alphabet' ? type : null,
+            }
+
+            _container.addRange(_NoteItem.FromObject(res), filter, sorter);
+            _container.toggleViewMode(viewMode);
+            initEvents();
+            // End DON'T touch
+        })
+        .catch(err => {
+            new _Alert({
+                timeout: 0,
+                type: 'danger',
+                message: 'Fetch failed!'
+            }).show();
+            _container.empty();
+            console.warn(err);
+
+            _mobile().then(() => {
+                new _Alert({
+                    timeout: 0,
+                    type: 'warning',
+                    message: 'Reload now !'
+                }).show();
+            });
+        });
+</script>
+
+</html>
