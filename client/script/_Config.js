@@ -47,7 +47,7 @@ class Config {
     /**
      * @param {String} key 
      */
-    setSecretKey(key = '') {
+    setSecretKey(key = null) {
         localStorage.setItem(StorageKey_secret, key);
     }
     /**
@@ -60,8 +60,8 @@ class Config {
     /**
      * @param {String} key 
      */
-    setHost(key = '') {
-        localStorage.setItem(StorageKey_host, key);
+    setHost(host = null) {
+        localStorage.setItem(StorageKey_host, host);
     }
 }
 
