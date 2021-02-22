@@ -1,7 +1,7 @@
 const MaxCol = 3;
 const MaxFilterHistory = 10;
-const ListModeClasses = 'col-8';
-const GridModeClasses = 'col-sm-8 col-lg-4';
+let GridModeClasses = 'col-lg-4 col-md-12 col-12'; // On large devices, show 3cols/row
+let ListModeClasses = 'col-lg-9 col-md-12 col-12'; // On medium devices, just 1 col
 
 /**
  * container attribute: `role="note-container"`
